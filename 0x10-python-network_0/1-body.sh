@@ -1,10 +1,3 @@
 #!/bin/bash
-
-URL=$1
-
-response=$(curl -s -o /dev/null -w "%{http_code}" "$URL")
-
-if [ "$response" == "200" ]; then
-    curl -s "$URL"
-fi
-
+# send a GET request to an URL with curl, and display the body of the response
+curl -sL "$1"
