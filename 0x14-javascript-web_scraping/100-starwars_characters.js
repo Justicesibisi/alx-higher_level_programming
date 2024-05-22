@@ -1,51 +1,45 @@
-#!/usr/bin/python3
-"""
-This script fetches and prints all characters of a specified Star Wars movie.
-"""
+#!/usr/bin/node
 
-import requests
-import sys
+const request = require('request');
 
-def fetch_movie_characters(movie_id):
-    """
-    Fetches and prints character names from a given Star Wars movie.
+// Get the movie ID from command line arguments
+const movieId = process.argv[2];
 
-    Args:
-        movie_id (int): The ID of the Star Wars movie.
+if (!movieId) {
+  console.error('Usage: ./100-starwars_characters.js <Movie ID>');
+  process.exit(1);
+}
 
-    Returns:
-        None
-    """
-    # API endpoint to fetch movie details
-    url = f"https://swapi.dev/api/films/{movie_id}/"
-    
-    # Fetch movie data
-    response = requests.get(url)
-    
-    # Check if the response is successful
-    if response.status_code != 200:
-        print("Error: Unable to fetch data for the given movie ID")
-        return
-    
-    # Parse the JSON response
-    movie_data = response.json()
-    
-    # Fetch and print character names
-    character_urls = movie_data.get("characters", [])
-    for character_url in character_urls:
-        character_response = requests.get(character_url)
-        if character_response.status_code == 200:
-            character_data = character_response.json()
-            print(character_data.get("name"))
+// API endpoint for the movie
+const url = `https://swapi.dev/api/films/${movieId}/`;
 
-if __name__ == "__main__":
-    # Check if the Movie ID is provided
-    if len(sys.argv) != 2:
-        print("Usage: ./0-gather_data_from_an_API.py <Movie ID>")
-        sys.exit(1)
-    
-    # Get the Movie ID from the command-line arguments
-    movie_id = sys.argv[1]
-    
-    # Fetch and print the movie characters
-    fetch_movie_characters(movie_id)
+// Fetch the movie details
+request(url, (error, response, body) => {
+  if (error) {
+    console.error('Error:', error);
+    return;
+  }
+
+  if (response.statusCode !== 200) {
+    console.error('Failed to fetch movie data. Status code:', response.statusCode);
+    return;
+  }
+
+  const movieData = JSON.parse(body);
+  const characterUrls = movieData.characters;
+
+  // Fetch and print each character name in order
+  characterUrls.forEach(characterUrl => {
+    request(characterUrl, (charError, charResponse, charBody) => {
+      if (charError) {
+        console.error('Error:', charError);
+        return;
+      }
+
+      if (charResponse.statusCode === 200) {
+        const characterData = JSON.parse(charBody);
+        console.log(characterData.name);
+      }
+    });
+  });
+});
